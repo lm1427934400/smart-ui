@@ -24,6 +24,12 @@ const sysTools = {
       component: () => import('@/views/sys-tools/history.vue'),
       name: 'HistoryMonitor',
       meta: { title: '历史监控', icon: 'el-icon-data-line' }
+    },
+    {
+      path: 'markdown-parser',
+      component: () => import('@/views/sys-tools/markdown-parser.vue'),
+      name: 'MarkdownParser',
+      meta: { title: 'Markdown解析', icon: 'el-icon-document' }
     }
   ]
 }

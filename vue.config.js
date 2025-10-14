@@ -1,6 +1,6 @@
 'use strict'
 const path = require('path')
-const CompressionPlugin = require('compression-webpack-plugin')// 引入gzip压缩插件
+// const CompressionPlugin = require('compression-webpack-plugin')// 引入gzip压缩插件
 const defaultSettings = require('./src/settings.js')
 
 function resolve(dir) {
@@ -49,13 +49,13 @@ module.exports = {
   },
   configureWebpack: {
     plugins: [
-      new CompressionPlugin({
-        algorithm: 'gzip',
-        test: /\.js$|\.html$|\.css/, // 匹配文件名
-        threshold: 10240, // 对超过10kb的数据进行压缩
-        deleteOriginalAssets: false, // 是否删除原文件
-        minRatio: 0.8
-      })
+      // new CompressionPlugin({
+      //   algorithm: 'gzip',
+      //   test: /\.js$|\.html$|\.css/, // 匹配文件名
+      //   threshold: 10240, // 对超过10kb的数据进行压缩
+      //   deleteOriginalAssets: false, // 是否删除原文件
+      //   minRatio: 0.8
+      // })
       // new MonacoWebpackPlugin()
     ],
     name: name,
@@ -71,6 +71,38 @@ module.exports = {
 
     // when there are many pages, it will cause too many meaningless requests
     config.plugins.delete('prefetch') //
+
+    // Add rule for mjs files to support mermaid
+    config.module
+      .rule('mjs')
+      .test(/\.mjs$/)
+      .include.add(/node_modules/)
+      .end()
+      .type('javascript/auto')
+      .end()
+
+    // Add specific rule for mermaid core file
+    config.module
+      .rule('mermaid-core')
+      .test(/mermaid\.core\.mjs$/)
+      .type('javascript/auto')
+      .use('babel-loader')
+      .loader('babel-loader')
+      .options({
+        presets: [
+          ['@babel/preset-env', {
+            targets: {
+              browsers: ['> 1%', 'last 2 versions']
+            }
+          }]
+        ],
+        plugins: [
+          '@babel/plugin-syntax-dynamic-import',
+          '@babel/plugin-proposal-nullish-coalescing-operator',
+          '@babel/plugin-proposal-optional-chaining'
+        ]
+      })
+      .end()
 
     config.module
       .rule('svg')
