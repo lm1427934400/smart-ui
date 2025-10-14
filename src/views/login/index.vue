@@ -1,19 +1,21 @@
 <template>
   <div class="login-container">
+    <!-- Earth background animation -->
+    <Earth class="earth-background" />
     <div id="particles-js">
       <vue-particles
         v-if="refreshParticles"
-        color="#dedede"
+        color="#4dabf7"
         :particle-opacity="0.7"
-        :particles-number="80"
+        :particles-number="60"
         shape-type="circle"
-        :particle-size="4"
-        lines-color="#dedede"
+        :particle-size="3"
+        lines-color="#4dabf7"
         :lines-width="1"
         :line-linked="true"
-        :line-opacity="0.4"
-        :lines-distance="150"
-        :move-speed="3"
+        :line-opacity="0.3"
+        :lines-distance="120"
+        :move-speed="2"
         :hover-effect="true"
         hover-mode="grab"
         :click-effect="true"
@@ -21,122 +23,115 @@
       />
     </div>
 
-    <div class="login-weaper animated bounceInDown">
-      <div class="login-left">
-        <div class="login-time" v-text="currentTime" />
-        <img :src="sysInfo.sys_app_logo" alt="" class="img">
-        <p class="title" v-text="sysInfo.sys_app_name" />
-      </div>
-      <div class="login-border">
-        <div class="login-main">
-          <div class="login-title">用户登录</div>
-          <el-form
-            ref="loginForm"
-            :model="loginForm"
-            :rules="loginRules"
-            class="login-form"
-            autocomplete="on"
-            label-position="left"
-          >
-            <el-form-item prop="username">
-              <span class="svg-container">
-                <i class="el-icon-user" />
-              </span>
-              <el-input
-                ref="username"
-                v-model="loginForm.username"
-                placeholder="用户名"
-                name="username"
-                type="text"
-                tabindex="1"
-                autocomplete="on"
-              />
-            </el-form-item>
-
-            <el-tooltip
-              v-model="capsTooltip"
-              content="Caps lock is On"
-              placement="right"
-              manual
+    <!-- Login card overlay -->
+    <div class="login-overlay">
+      <div class="login-weaper animated bounceInDown">
+        <div class="login-border">
+          <div class="login-main">
+            <div class="login-title">用户登录</div>
+            <el-form
+              ref="loginForm"
+              :model="loginForm"
+              :rules="loginRules"
+              class="login-form"
+              autocomplete="on"
+              label-position="left"
             >
-              <el-form-item prop="password">
-                <span class="svg-container">
-                  <svg-icon icon-class="password" />
-                </span>
-                <el-input
-                  :key="passwordType"
-                  ref="password"
-                  v-model="loginForm.password"
-                  :type="passwordType"
-                  placeholder="密码"
-                  name="password"
-                  tabindex="2"
-                  autocomplete="on"
-                  @keyup.native="checkCapslock"
-                  @blur="capsTooltip = false"
-                  @keyup.enter.native="handleLogin"
-                />
-                <span class="show-pwd" @click="showPwd">
-                  <svg-icon
-                    :icon-class="
-                      passwordType === 'password' ? 'eye' : 'eye-open'
-                    "
+              <el-form-item prop="username" class="login-form-item">
+                <div class="input-wrapper">
+                  <span class="svg-container">
+                    <i class="el-icon-user" />
+                  </span>
+                  <el-input
+                    ref="username"
+                    v-model="loginForm.username"
+                    placeholder="用户名"
+                    name="username"
+                    type="text"
+                    tabindex="1"
+                    autocomplete="on"
+                    class="custom-input"
                   />
-                </span>
+                </div>
               </el-form-item>
-            </el-tooltip>
-            <el-form-item prop="code" style="width: 66%; float: left">
-              <span class="svg-container">
-                <svg-icon icon-class="validCode" />
-              </span>
-              <el-input
-                ref="username"
-                v-model="loginForm.code"
-                placeholder="验证码"
-                name="username"
-                type="text"
-                tabindex="3"
-                maxlength="5"
-                autocomplete="off"
-                style="width: 75%"
-                @keyup.enter.native="handleLogin"
-              />
-            </el-form-item>
-            <div
-              class="login-code"
-              style="
-                cursor: pointer;
-                width: 30%;
-                height: 48px;
-                float: right;
-                background-color: #f0f1f5;
-              "
-            >
-              <img
-                style="
-                  height: 48px;
-                  width: 100%;
-                  border: 1px solid rgba(0, 0, 0, 0.1);
-                  border-radius: 5px;
-                "
-                :src="codeUrl"
-                @click="getCode"
-              >
-            </div>
 
-            <el-button
-              :loading="loading"
-              type="primary"
-              style="width: 100%; padding: 12px 20px; margin-bottom: 30px"
-              @click.native.prevent="handleLogin"
-            >
-              <span v-if="!loading">{{ useLdap ? '使用LDAP账号登陆' : '登陆' }}</span>
-              <span v-else>登 录 中...</span>
-            </el-button>
-            <span @click="toggleLoginMethod" style="cursor: pointer; color: #409EFF; padding: 12px 50px; margin-bottom: 20px">
-              {{ useLdap ? 'Use local user account to login' : '   Use LDAP account to login' }}
-            </span>
-          </el-form>
+              <el-tooltip
+                v-model="capsTooltip"
+                content="Caps lock is On"
+                placement="right"
+                manual
+              >
+                <el-form-item prop="password" class="login-form-item">
+                  <div class="input-wrapper">
+                    <span class="svg-container">
+                      <svg-icon icon-class="password" />
+                    </span>
+                    <el-input
+                      :key="passwordType"
+                      ref="password"
+                      v-model="loginForm.password"
+                      :type="passwordType"
+                      placeholder="密码"
+                      name="password"
+                      tabindex="2"
+                      autocomplete="on"
+                      @keyup.native="checkCapslock"
+                      @blur="capsTooltip = false"
+                      @keyup.enter.native="handleLogin"
+                      class="custom-input"
+                    />
+                    <span class="show-pwd" @click="showPwd">
+                      <svg-icon
+                        :icon-class="
+                          passwordType === 'password' ? 'eye' : 'eye-open'
+                        "
+                      />
+                    </span>
+                  </div>
+                </el-form-item>
+              </el-tooltip>
+              <div class="captcha-container">
+                <el-form-item prop="code" class="captcha-input login-form-item">
+                  <div class="input-wrapper">
+                    <span class="svg-container">
+                      <svg-icon icon-class="validCode" />
+                    </span>
+                    <el-input
+                      ref="username"
+                      v-model="loginForm.code"
+                      placeholder="验证码"
+                      name="username"
+                      type="text"
+                      tabindex="3"
+                      maxlength="5"
+                      autocomplete="off"
+                      class="custom-input"
+                      @keyup.enter.native="handleLogin"
+                    />
+                  </div>
+                </el-form-item>
+                <div class="login-code">
+                  <img
+                    :src="codeUrl"
+                    @click="getCode"
+                  />
+                </div>
+              </div>
+
+              <el-button
+                :loading="loading"
+                type="primary"
+                style="width: 100%; padding: 12px 20px; margin-bottom: 30px; background: linear-gradient(45deg, #4dabf7, #3bc9db); border: none; font-weight: 600"
+                @click.native.prevent="handleLogin"
+              >
+                <span v-if="!loading">{{ useLdap ? '使用LDAP账号登陆' : '登陆' }}</span>
+                <span v-else>登 录 中...</span>
+              </el-button>
+              <span @click="toggleLoginMethod" style="cursor: pointer; color: #4dabf7; padding: 12px 50px; margin-bottom: 20px; display: block; text-align: center">
+                {{ useLdap ? 'Use local user account to login' : '   Use LDAP account to login' }}
+              </span>
+            </el-form>
+          </div>
         </div>
       </div>
     </div>
@@ -155,7 +150,6 @@
       style="visibility: visible; width: 100%"
     >
       <div class="s-bottom-layer-content">
-
         <div class="lh">
           <a class="text-color" href="https://beian.miit.gov.cn" target="_blank">
             沪ICP备XXXXXXXXX号-1
@@ -187,11 +181,11 @@
 import { getCodeImg } from '@/api/login'
 import moment from 'moment'
 import SocialSign from './components/SocialSignin'
-import store from "@/store";
+import Earth from '@/components/Earth/Index.vue'
 
 export default {
   name: 'Login',
-  components: { SocialSign },
+  components: { SocialSign, Earth },
   data() {
     return {
       // logo: require('@/views/login/logo.png'),
@@ -376,78 +370,115 @@ $cursor: #fff;
   zoom: 1;
   margin: 0;
   line-height: 39px;
-  // background: #0e6cff;
+
 }
+
 #bottom_layer .lh {
   display: inline-block;
   margin-right: 14px;
+
 }
+
 #bottom_layer .lh .emphasize {
   text-decoration: underline;
   font-weight: 700;
+
 }
+
 #bottom_layer .lh:last-child {
   margin-left: -2px;
   margin-right: 0;
+
 }
+
 #bottom_layer .lh.activity {
   font-weight: 700;
   text-decoration: underline;
+
 }
+
 #bottom_layer a {
   font-size: 12px;
   text-decoration: none;
+
 }
+
 #bottom_layer .text-color {
   color: #bbb;
+
 }
+
 #bottom_layer .aria-img {
   width: 49px;
   height: 20px;
   margin-bottom: -5px;
+
 }
+
 #bottom_layer a:hover {
   color: #fff;
+
 }
+
 #bottom_layer .s-bottom-layer-content {
   margin: 0 17px;
   text-align: center;
+
 }
+
 #bottom_layer .s-bottom-layer-content .auto-transform-line {
   display: inline;
+
 }
+
 #bottom_layer .s-bottom-layer-content .auto-transform-line:first-child {
   margin-right: 14px;
+
 }
+
 .s-bottom-space {
   position: static;
   width: 100%;
   height: 40px;
   margin: 23px auto 12px;
+
 }
+
 #bottom_layer .open-content-info a:hover {
   color: #fff;
+
 }
+
 #bottom_layer .open-content-info .text-color {
   color: #626675;
+
 }
+
 .open-content-info {
   position: relative;
   display: inline-block;
   width: 20px;
+
 }
+
 .open-content-info > span {
   cursor: pointer;
   font-size: 14px;
+
 }
+
 .open-content-info > span:hover {
   color: #fff;
+
 }
+
 .open-content-info .tip-hover-panel {
   position: absolute;
   display: none;
   padding-bottom: 18px;
+
 }
+
 .open-content-info .tip-hover-panel .rest_info_tip {
   max-width: 560px;
   padding: 8px 12px 8px 12px;
@@ -456,153 +487,214 @@ $cursor: #fff;
   border: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
   text-align: left;
+
 }
+
 .open-content-info .tip-hover-panel .rest_info_tip .tip-wrapper {
   white-space: nowrap;
   line-height: 20px;
+
 }
+
 .open-content-info .tip-hover-panel .rest_info_tip .tip-wrapper .tip-item {
   height: 20px;
   line-height: 20px;
+
 }
+
 .open-content-info
   .tip-hover-panel
   .rest_info_tip
   .tip-wrapper
   .tip-item:last-child {
   margin-right: 0;
+
 }
+
 @media screen and (max-width: 515px) {
   .open-content-info {
     width: 16px;
+
   }
   .open-content-info .tip-hover-panel {
     right: -16px !important;
+
   }
-}
-.footer {
-  background-color: #0e6cff;
-  margin-bottom: -20px;
 }
 
 .login-container {
-  display: -webkit-box;
-  display: -ms-flexbox;
   display: flex;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
-  align-items: center;
   width: 100%;
   height: 100%;
   margin: 0 auto;
-  background: url("../../assets/login.png") no-repeat;
-  background-color: #0e6cff;
+  background: linear-gradient(135deg, #0f172a, #1e3a8a);
   position: relative;
   background-size: cover;
   height: 100vh;
   background-position: 50%;
+  overflow: hidden;
+}
+
+.earth-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
 }
 
 #particles-js {
-  z-index: 1;
+  z-index: 2;
   width: 100%;
   height: 100%;
   position: absolute;
 }
 
-.login-weaper {
-  margin: 0 auto;
-  width: 1000px;
-  -webkit-box-shadow: -4px 5px 10px rgba(0, 0, 0, 0.4);
-  box-shadow: -4px 5px 10px rgba(0, 0, 0, 0.4);
-  z-index: 1000;
-}
-
-.login-left {
-  border-top-left-radius: 5px;
-  border-bottom-left-radius: 5px;
-  -webkit-box-pack: center;
-  -ms-flex-pack: center;
-  justify-content: center;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-  -ms-flex-direction: column;
-  flex-direction: column;
-  background-color: rgba(64, 158, 255, 0);
-  color: #fff;
-  float: left;
-  width: 50%;
+.login-overlay {
   position: relative;
-  min-height: 500px;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
-  align-items: center;
-  display: -webkit-box;
-  display: -ms-flexbox;
+  z-index: 1000;
+  width: 100%;
+  height: 100vh;
   display: flex;
-  .login-time {
-    position: absolute;
-    left: 25px;
-    top: 25px;
-    width: 100%;
-    color: #fff;
-    opacity: 0.9;
-    font-size: 18px;
-    overflow: hidden;
-    font-weight: 500;
-  }
+  align-items: center;
+  justify-content: flex-end; /* Align to right side */
+  padding-right: calc(33.33% / 2); /* Center in the right 1/3 */
 }
 
-.login-left .img {
-  width: 90px;
-  height: 90px;
-  border-radius: 3px;
-}
-
-.login-left .title {
-  text-align: center;
-  color: #fff;
-  letter-spacing: 2px;
-  font-size: 16px;
-  font-weight: 600;
+.login-weaper {
+  width: 350px; /* Fixed width for the login card */
 }
 
 .login-border {
-  position: relative;
-  min-height: 500px;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
-  align-items: center;
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  border-left: none;
-  border-top-right-radius: 5px;
-  border-bottom-right-radius: 5px;
-  color: #fff;
-  background-color: hsla(0, 0%, 100%, 0.9);
-  width: 50%;
-  float: left;
+  padding: 40px 30px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
 }
 
 .login-main {
-  margin: 0 auto;
-  width: 65%;
+  width: 100%;
 }
 
 .login-title {
-  color: #333;
+  color: #fff;
   margin-bottom: 40px;
-  font-weight: 500;
-  font-size: 22px;
+  font-weight: 600;
+  font-size: 28px;
   text-align: center;
   letter-spacing: 4px;
+  text-shadow: 0 0 10px rgba(77, 171, 247, 0.7);
 }
 
 @supports (-webkit-mask: none) and (not (cater-color: $cursor)) {
   .login-container .el-input input {
     color: $cursor;
+
   }
+}
+
+.login-form-item {
+  margin-bottom: 22px !important;
+}
+
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.input-wrapper:hover {
+  border: 1px solid rgba(77, 171, 247, 0.5);
+  box-shadow: 0 0 10px rgba(77, 171, 247, 0.3);
+}
+
+.svg-container {
+  padding: 6px 5px 6px 15px;
+  color: rgba(0, 0, 0, 0.7);
+  width: 40px; /* Fixed width for alignment */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 47px;
+}
+
+.custom-input {
+  flex: 1;
+}
+
+.custom-input ::v-deep input {
+  color: #000 !important;
+  height: 47px;
+  background: #fff !important; /* Ensure white background */
+  border: 0px;
+  -webkit-appearance: none;
+  border-radius: 0px;
+  padding: 12px 5px 12px 15px;
+  caret-color: #000;
+  font-size: 16px;
+}
+
+.custom-input ::v-deep input::placeholder {
+  color: rgba(0, 0, 0, 0.7) !important;
+}
+
+.captcha-container {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.captcha-input {
+  flex: 1;
+  margin-bottom: 0 !important;
+}
+
+.captcha-input ::v-deep .input-wrapper {
+  background: #fff; /* White background for captcha input */
+}
+
+.login-code {
+  cursor: pointer;
+  width: 30%;
+  height: 48px;
+  background-color: #fff;
+  border-radius: 5px;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-code img {
+  height: 48px;
+  width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+}
+
+.show-pwd {
+  position: absolute;
+  right: 10px;
+  top: 0;
+  height: 47px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: rgba(0, 0, 0, 0.7);
+  cursor: pointer;
+  user-select: none;
 }
 
 /* reset element-ui css */
@@ -611,31 +703,20 @@ $cursor: #fff;
     display: inline-block;
     height: 47px;
     width: 85%;
-
-    input {
-      background: transparent;
-      border: 0px;
-      -webkit-appearance: none;
-      border-radius: 0px;
-      padding: 12px 5px 12px 15px;
-      color: #333;
-      height: 47px;
-      caret-color: #333;
-
-      &:-webkit-autofill {
-        box-shadow: 0 0 0px 1000px $bg inset !important;
-        -webkit-text-fill-color: $cursor !important;
-      }
-    }
   }
 
   .el-form-item {
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    background: rgba(255, 255, 255, 0.8);
-    border-radius: 5px;
-    color: #454545;
+    border: none;
+    background: transparent;
+    border-radius: 0;
+    margin-bottom: 0;
+  }
+  
+  .el-form-item__content {
+    line-height: normal;
   }
 }
+
 $bg: #2d3a4b;
 $dark_gray: #889aa4;
 $light_gray: #eee;
@@ -655,7 +736,7 @@ $light_gray: #eee;
 
   .svg-container {
     padding: 6px 5px 6px 15px;
-    color: $dark_gray;
+    color: rgba(0, 0, 0, 0.7); /* Changed to darker color */
     vertical-align: middle;
     width: 30px;
     display: inline-block;
@@ -676,11 +757,16 @@ $light_gray: #eee;
   .show-pwd {
     position: absolute;
     right: 10px;
-    top: 7px;
+    top: 50%;
+    transform: translateY(-50%);
     font-size: 16px;
-    color: $dark_gray;
+    color: rgba(0, 0, 0, 0.7);
     cursor: pointer;
     user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
   }
 
   .thirdparty-button {
