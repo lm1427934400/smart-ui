@@ -2,6 +2,10 @@
 
 import Layout from '@/layout'
 
+/**
+ * 系统工具模块路由配置
+ * 包含监控、历史记录、Markdown解析和专业Markdown编辑器等功能
+ */
 const sysTools = {
   path: '/sys-tools',
   component: Layout,
@@ -30,6 +34,12 @@ const sysTools = {
       component: () => import('@/views/sys-tools/markdown-parser.vue'),
       name: 'MarkdownParser',
       meta: { title: 'Markdown解析', icon: 'el-icon-document' }
+    },
+    {
+      path: 'enhanced-markdown-editor',
+      component: () => import('@/views/sys-tools/enhanced-markdown-editor.vue'),
+      name: 'EnhancedMarkdownEditor',
+      meta: { title: '专业Markdown编辑器', icon: 'el-icon-edit' }
     }
   ]
 }
