@@ -141,7 +141,9 @@ export default {
     },
     expandAll() {
       if (this.jsonData) {
-        this.expandedKeys = this.getAllKeys(this.jsonData)
+        // Get all keys and include the root path
+        const allKeys = this.getAllKeys(this.jsonData);
+        this.expandedKeys = ['$'].concat(allKeys);
       }
     },
     collapseAll() {
