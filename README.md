@@ -91,6 +91,7 @@ Smart-API 工单系统是基于 Go 语言开发的后台管理系统，前后端
 15. 内容管理：demo功能，下设分类管理、内容管理。可以参考使用方便快速入门。
 16. 定时任务：自动化任务，目前支持接口调用和函数调用。
 17. **专业Markdown编辑器**：支持实时预览、流程图渲染、智能目录生成等功能的现代化Markdown编辑器。
+18. **JSON在线解析器**：实时解析、验证和可视化JSON数据，支持格式化、压缩、Schema生成等功能。
 
 ## 🛰️ 系统模块
 
@@ -103,11 +104,12 @@ Smart-API 工单系统是基于 Go 语言开发的后台管理系统，前后端
 7. **服务监控**：实时查看服务器性能与运行状态。
 8. **评分与留言**：任务结束后支持用户对工单评分并提交评价。
 9. **专业Markdown编辑器**：提供功能丰富的Markdown编辑和预览功能，支持Mermaid流程图渲染。
+10. **JSON在线解析器**：提供JSON数据的实时解析、验证和可视化树形展示，支持格式化、压缩、Schema生成等工具。
 
 ## 🔧 技术栈
 
 - **后端**: Go, Gin, GORM, JWT, Casbin
-- **前端**: Vue.js, Element UI, Axios, WebSocket
+- **前端**: Vue.js, Element UI, Axios, WebSocket, Clipboard.js
 - **数据库**: MySQL / PostgreSQL / SQLite
 - **其他工具**: Docker, Swagger, GIT
 -
