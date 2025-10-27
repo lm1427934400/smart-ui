@@ -1,13 +1,13 @@
 <template>
   <div class="json-parser-container">
-    <div class="header">
+    <!-- <div class="header">
       <h2>JSON在线解析器</h2>
       <p>实时解析、验证和可视化JSON数据</p>
-    </div>
+    </div> -->
 
     <el-row :gutter="20" class="main-content">
       <!-- 左侧输入区域 -->
-      <el-col :span="12" class="input-panel">
+      <el-col :xs="24" :sm="24" :md="24" :lg="12" :xl="12" class="input-panel">
         <div class="panel-header">
           <h3>JSON输入</h3>
           <div class="actions">
@@ -34,7 +34,7 @@
       </el-col>
 
       <!-- 右侧树形展示区域 -->
-      <el-col :span="12" class="tree-panel">
+      <el-col :xs="24" :sm="24" :md="24" :lg="12" :xl="12" class="tree-panel">
         <div class="panel-header">
           <h3>树形结构</h3>
           <div class="actions">
@@ -225,9 +225,10 @@ export default {
 <style scoped>
 .json-parser-container {
   padding: 20px;
-  background-color: #0a1929;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   min-height: calc(100vh - 84px);
   color: #e0e0e0;
+  box-sizing: border-box;
 }
 
 .header {
@@ -244,10 +245,23 @@ export default {
 }
 
 .main-content {
-  height: calc(100vh - 180px);
   min-height: 500px;
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
+}
+
+/* 响应式布局调整 */
+@media screen and (max-width: 992px) {
+  .main-content {
+    flex-direction: column;
+  }
+  
+  .input-panel,
+  .tree-panel {
+    margin-bottom: 20px;
+    height: 50vh;
+  }
 }
 
 .panel-header {
@@ -256,12 +270,13 @@ export default {
   align-items: center;
   margin-bottom: 10px;
   padding-bottom: 10px;
-  border-bottom: 1px solid #1e3a5c;
+  border-bottom: 1px solid #334155;
 }
 
 .panel-header h3 {
   margin: 0;
-  color: #00d4ff;
+  color: #38bdf8;
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
 }
 
 .actions .el-button {
@@ -270,10 +285,18 @@ export default {
 
 .input-panel,
 .tree-panel {
-  height: 100%;
+  height: calc(100vh - 140px);
   display: flex;
   flex-direction: column;
-  min-height: 400px;
+  box-sizing: border-box;
+}
+
+/* 大屏幕保持两列布局，小屏幕垂直布局 */
+@media screen and (min-width: 993px) {
+  .input-panel,
+  .tree-panel {
+    height: calc(100vh - 140px);
+  }
 }
 
 .input-panel {
@@ -292,24 +315,24 @@ export default {
 }
 
 .input-panel ::v-deep .el-textarea__inner {
-  background-color: #1a2c42;
+  background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
   color: #e0e0e0;
-  border: 1px solid #1e3a5c;
+  border: 1px solid #334155;
   height: 100% !important;
   font-family: 'Consolas', monospace;
   flex: 1;
-  min-height: 300px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .tree-container {
   flex: 1;
   overflow-y: auto;
-  background-color: #1a2c42;
-  border: 1px solid #1e3a5c;
-  border-radius: 4px;
+  background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid #334155;
+  border-radius: 6px;
   padding: 10px;
-  min-height: 300px;
   height: 100%;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .empty-placeholder {
@@ -327,12 +350,12 @@ export default {
 
 
 .error-message {
-  color: #ff4d4f;
+  color: #fb7185;
   margin-top: 10px;
   padding: 10px;
-  background-color: rgba(255, 77, 79, 0.1);
-  border-radius: 4px;
-  border: 1px solid rgba(255, 77, 79, 0.3);
+  background-color: rgba(251, 113, 133, 0.1);
+  border-radius: 6px;
+  border: 1px solid rgba(251, 113, 133, 0.3);
   flex-shrink: 0;
 }
 
@@ -342,15 +365,18 @@ export default {
 }
 
 .tree-container::-webkit-scrollbar-track {
-  background: #0d1b2a;
-}
-
-.tree-container::-webkit-scrollbar-thumb {
-  background: #1e3a5c;
+  background: #0f172a;
   border-radius: 3px;
 }
 
+.tree-container::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
+  transition: background-color 0.3s ease;
+}
+
 .tree-container::-webkit-scrollbar-thumb:hover {
-  background: #00d4ff;
+  background: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
 }
 </style>
