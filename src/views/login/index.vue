@@ -127,9 +127,9 @@
                 <span v-if="!loading">{{ useLdap ? '使用LDAP账号登陆' : '登陆' }}</span>
                 <span v-else>登 录 中...</span>
               </el-button>
-              <span @click="toggleLoginMethod" style="cursor: pointer; color: #4dabf7; padding: 12px 50px; margin-bottom: 20px; display: block; text-align: center">
+              <!-- <span @click="toggleLoginMethod" style="cursor: pointer; color: #4dabf7; padding: 12px 50px; margin-bottom: 20px; display: block; text-align: center">
                 {{ useLdap ? 'Use local user account to login' : '   Use LDAP account to login' }}
-              </span>
+              </span> -->
             </el-form>
           </div>
         </div>

@@ -130,6 +130,12 @@ const actions = {
         commit('SET_PERMISSIONS', [])
         removeToken()
         storage.clear()
+        // 重置路由
+        resetRouter()
+        // 明确跳转到登录页
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login'
+        }
         resolve()
       }).catch(error => {
         reject(error)

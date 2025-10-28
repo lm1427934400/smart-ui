@@ -7,6 +7,7 @@ Vue.use(Router)
 import Layout from '@/layout'
 
 /* Router Modules */
+import articleManage from './modules/articleManage'
 // import componentsRouter from './modules/components'
 // import chartsRouter from './modules/charts'
 // import tableRouter from './modules/table'
@@ -39,7 +40,23 @@ import Layout from '@/layout'
  * all roles can be accessed
  */
 export const constantRoutes = [
+  // 文章浏览路由 - 无需登录
 
+  {    
+    path: '/articles/detail/:id',    
+    component: () => import('@/views/articles/detail'),    
+    name: 'ArticleDetail',    
+    meta: { title: '文章详情', noCache: true, target: '_blank' },   
+    hidden: true  
+  },  
+     
+  {    
+    path: '/articles/list',    
+    component: () => import('@/views/articles/list'),   
+     name: 'ArticleList',    
+     meta: { title: '文章列表', noCache: true, target: '_blank' },   
+    hidden: true 
+  },
   {
     path: '/redirect',
     component: Layout,
@@ -105,7 +122,9 @@ export const constantRoutes = [
  * the routes that need to be dynamically loaded based on user roles
  */
 export const asyncRoutes = [
-
+  // 文章管理路由 - 需要作者权限
+  articleManage,
+  // 可以在这里添加其他模块路由
 ]
 
 const createRouter = () => new Router({

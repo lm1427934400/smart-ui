@@ -135,7 +135,7 @@ const actions = {
       const loadMenuData = []
 
       getRoutes().then(response => {
-        // console.log(JSON.stringify(response))
+        console.log('菜单数据响应:', response)
         let data = response
         if (response.code !== 200) {
           this.$message({
@@ -144,20 +144,26 @@ const actions = {
           })
         } else {
           data = response.data
-          Object.assign(loadMenuData, data)
+          console.log('菜单数据:', data)
+          // 使用正确的数组复制方式，而不是Object.assign
+          loadMenuData.splice(0, loadMenuData.length, ...data)
 
+          // 清空asyncRoutes，避免重复添加
+          asyncRoutes.length = 0
           generaMenu(asyncRoutes, loadMenuData)
           asyncRoutes.push({ path: '*', redirect: '/', hidden: true })
+          console.log('生成的路由:', asyncRoutes)
           commit('SET_ROUTES', asyncRoutes)
           const sidebarRoutes = []
           generaMenu(sidebarRoutes, loadMenuData)
+          console.log('侧边栏路由:', sidebarRoutes)
           commit('SET_SIDEBAR_ROUTERS', constantRoutes.concat(sidebarRoutes))
           commit('SET_DEFAULT_ROUTES', sidebarRoutes)
           commit('SET_TOPBAR_ROUTES', sidebarRoutes)
           resolve(asyncRoutes)
         }
       }).catch(error => {
-        console.log(error)
+        console.log('菜单加载错误:', error)
       })
     })
   }
