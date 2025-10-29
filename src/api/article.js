@@ -105,3 +105,29 @@ export function previewMarkdown(params) {
     params
   })
 }
+
+/**
+ * 获取当前用户的文章列表（树形结构）
+ * @param {Object} params - 查询参数
+ * @returns {Promise}
+ */
+export function fetchMyArticles(params = {}) {
+  return request({
+    url: '/v1/article/current-user',
+    method: 'get',
+    params
+  })
+}
+
+/**
+ * 删除指定ID的文章
+ * @param {number} id - 文章ID
+ * @returns {Promise}
+ */
+export function deleteArticleById(id) {
+  return request({
+    url: '/v1/article/delete',
+    method: 'post',
+    data: [id] // 后端DeleteArticle方法期望接收ID数组
+  })
+}

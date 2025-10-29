@@ -168,6 +168,14 @@ export default {
         if (valid) {
           console.log('提交文章数据:', { title: this.article.title, contentLength: this.article.content.length })
           
+          // 添加加载状态
+          const loadingInstance = this.$loading({
+            lock: true,
+            text: '正在发布文章...',
+            spinner: 'el-icon-loading',
+            background: 'rgba(0, 0, 0, 0.7)'
+          })
+          
           // 使用已封装的API方法发布文章
           publishArticle({
             title: this.article.title,
@@ -175,28 +183,75 @@ export default {
             html_content: '' // 为了匹配数据库字段名，确保数据完整
           })
           .then(res => {
+            loadingInstance.close()
             console.log('发布文章API响应:', res)
-            if (res && res.code === 200) {
-              this.$message.success('文章发布成功')
-              this.resetForm()
-              // 跳转到我的文章列表
-              this.$router.push('/article-manage/my-articles')
+            
+            // 增强响应格式检测 - 检查各种可能的成功响应格式
+            const isSuccess = res && (
+              res.code === 200 || 
+              res.code === 0 || 
+              res.success === true || 
+              res.status === 'success' || 
+              (res.data && res.data.success)
+            )
+            
+            if (isSuccess) {
+              console.log('文章发布成功，准备显示成功提示')
+              this.$message({
+                message: '文章发布成功',
+                type: 'success',
+                duration: 2000
+              })
+              // 延迟重置和跳转，确保用户能看到成功提示
+              setTimeout(() => {
+                this.resetForm()
+                // 跳转到我的文章列表
+                this.$router.push('/article-manage/my-articles')
+              }, 1500)
             } else {
-              // 更详细的错误信息处理
-              const errorMsg = res?.msg || res?.message || '文章发布失败'
+              // 详细的错误信息处理 - 检查各种可能的错误信息字段
+              const errorMsg = res?.msg || 
+                             res?.message || 
+                             res?.error || 
+                             (res?.data && (res.data.msg || res.data.message)) || 
+                             '文章发布失败'
               console.error('发布失败原因:', errorMsg)
+              console.error('完整响应:', res)
               this.$message.error(errorMsg)
             }
           })
           .catch(err => {
-            console.error('发布文章失败:', err)
-            // 捕获不同类型的错误
+            loadingInstance.close()
+            console.error('发布文章捕获到错误:', err)
+            
+            // 更详细的错误类型区分和消息处理
             let errorMsg = '文章发布失败'
+            
             if (err.response) {
-              errorMsg = err.response.data?.msg || err.response.statusText || errorMsg
+              // 服务器返回了错误响应
+              console.error('响应错误状态:', err.response.status)
+              console.error('响应错误数据:', err.response.data)
+              
+              if (err.response.status === 401) {
+                errorMsg = '未授权，请重新登录'
+              } else if (err.response.status === 403) {
+                errorMsg = '没有权限发布文章'
+              } else if (err.response.status === 400) {
+                errorMsg = err.response.data?.msg || err.response.data?.message || '请求参数错误'
+              } else if (err.response.status === 500) {
+                errorMsg = '服务器错误，请稍后重试'
+              } else {
+                errorMsg = err.response.data?.msg || err.response.data?.message || err.response.statusText || errorMsg
+              }
             } else if (err.request) {
+              // 请求已发出但没有收到响应
+              console.error('网络请求失败详情:', err.request)
               errorMsg = '网络请求失败，请检查网络连接'
+            } else {
+              // 请求配置出错
+              errorMsg = err.message || errorMsg
             }
+            
             this.$message.error(errorMsg)
           })
         } else {
