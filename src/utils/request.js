@@ -7,6 +7,7 @@ import { getToken } from '@/utils/auth'
 // 动态设置 baseURL
 const getBaseUrl = () => {
   if (process.env.NODE_ENV === 'development') {
+    // 开发环境：基础URL不包含/v1，由API方法自行添加
     return `${process.env.VUE_APP_BASE_API}${process.env.VUE_APP_API_PATH}`
   } else {
     // 生产环境：如果 VUE_APP_BASE_API 有值则使用，否则使用 VUE_APP_API_PATH

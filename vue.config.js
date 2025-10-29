@@ -35,7 +35,16 @@ module.exports = {
   productionSourceMap: false,
   devServer: {
     port: port,
-    open: false
+    open: false,
+    proxy: {
+      '/api/v1': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        pathRewrite: {
+          '^/api/v1': '/api/v1'
+        }
+      }
+    }
     // overlay: {
     //   warnings: false,
     //   errors: true

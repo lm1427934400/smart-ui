@@ -55,7 +55,7 @@
 </template>
 
 <script>
-import request from '@/utils/request'
+import { getCurrentUserArticles, deleteArticle } from '@/api/article'
 
 export default {
   name: 'MyArticles',
@@ -74,20 +74,14 @@ export default {
   methods: {
     fetchMyArticles() {
       // 调用后端API获取当前用户的文章列表
-      request({
-        url: '/v1/sys-content',
-        method: 'get',
-        params: {
-          pageSize: this.pageSize,
-          pageIndex: this.currentPage,
-          title: this.searchKeyword || undefined,
-          // 后端会自动根据当前登录用户过滤数据
-          createdBy: 'current' // 这个参数可以告诉后端只返回当前用户的文章
-        }
+      getCurrentUserArticles({
+        pageSize: this.pageSize,
+        pageIndex: this.currentPage,
+        title: this.searchKeyword || undefined
       }).then(res => {
-        if (res && res.data) {
-          this.articleList = res.data.list || []
-          this.total = res.data.total || 0
+        if (res && res.code === 200) {
+          this.articleList = res.data?.list || []
+          this.total = res.data?.total || 0
         }
       }).catch(err => {
         console.error('获取文章列表失败:', err)
@@ -105,8 +99,8 @@ export default {
     },
     
     editArticle(id) {
-      // 这里可以跳转到编辑页面，目前先用发布页面替代
-      this.$message.info('编辑功能开发中')
+      // 跳转到编辑页面
+      this.$router.push(`/article-manage/edit/${id}`)
     },
     
     deleteArticle(id) {
@@ -115,17 +109,14 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        // 使用正确的request方式删除文章
-        request({
-          url: `/v1/sys-content/${id}`,
-          method: 'delete'
-        }).then(res => {
-          if (res && res.code === 0) {
-            this.$message.success('文章删除成功')
-            this.fetchMyArticles() // 重新获取文章列表
-          } else {
-            this.$message.error(res.message || '文章删除失败')
-          }
+        // 调用删除文章API
+        deleteArticle([id]).then(res => {
+            if (res && res.code === 200) {
+              this.$message.success('文章删除成功')
+              this.fetchMyArticles() // 重新获取文章列表
+            } else {
+              this.$message.error(res?.msg || '文章删除失败')
+            }
         }).catch(err => {
           console.error('删除文章失败:', err)
           this.$message.error('文章删除失败')

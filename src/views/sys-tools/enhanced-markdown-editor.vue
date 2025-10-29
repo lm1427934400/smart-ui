@@ -98,15 +98,22 @@
 <script>
 import MarkdownIt from 'markdown-it'
 import SplitPane from 'vue-splitpane'
+import { previewMarkdown } from '@/api/article'
 
 export default {
   name: 'EnhancedMarkdownEditor',
   components: {
     SplitPane
   },
+  props: {
+    initialContent: {
+      type: String,
+      default: ''
+    }
+  },
   data() {
     return {
-      markdownContent: '',
+      markdownContent: this.initialContent || '',
       parsedContent: '',
       isNightMode: false,
       fullscreenVisible: false,
@@ -125,6 +132,19 @@ export default {
       return this.markdownContent.split('\n').length
     }
   },
+  watch: {
+    markdownContent(newContent) {
+      this.saveToLocalStorage()
+      // 发送内容变化事件给父组件
+      this.$emit('content-change', newContent)
+    },
+    // 监听初始内容变化
+    initialContent(newContent) {
+      if (newContent !== this.markdownContent) {
+        this.markdownContent = newContent
+      }
+    }
+  },
   methods: {
     handleInput() {
       // Debounce the parsing to improve performance
@@ -134,7 +154,48 @@ export default {
       }, 300)
     },
     
+    // 使用后端API预览Markdown
+    async parseMarkdownWithAPI() {
+      try {
+        const res = await previewMarkdown({ content: this.markdownContent })
+        if (res && res.code === 200) {
+          this.parsedContent = res.data?.html || ''
+          // 生成目录
+          this.generateTOC(this.parsedContent)
+          // 渲染mermaid和添加复制按钮
+          this.$nextTick(() => {
+            this.renderMermaid()
+            this.addCopyButtons()
+          })
+          return true
+        }
+      } catch (error) {
+        console.error('预览Markdown API调用失败，使用本地解析:', error)
+      }
+      return false
+    },
+    
     parseMarkdown() {
+      // 首先尝试使用后端API预览
+      this.parseMarkdownWithAPI().then((success) => {
+        // 如果API调用失败，回退到本地解析
+        if (!success) {
+          this.parseMarkdownLocally()
+        } else {
+          // 如果API调用成功，更新全屏预览（如果存在）
+          this.$nextTick(() => {
+            if (this.$refs.fullscreenPreview) {
+              this.$refs.fullscreenPreview.innerHTML = this.parsedContent
+              this.renderMermaidInElement(this.$refs.fullscreenPreview)
+              this.addCopyButtonsInElement(this.$refs.fullscreenPreview)
+            }
+          })
+        }
+      })
+    },
+    
+    // 本地解析Markdown
+    parseMarkdownLocally() {
       // Custom highlight function to handle mermaid code blocks
       const md = new MarkdownIt({
         html: true,
@@ -177,6 +238,12 @@ export default {
       this.$nextTick(() => {
         this.renderMermaid()
         this.addCopyButtons()
+        // 同时更新全屏预览（如果存在）
+        if (this.$refs.fullscreenPreview) {
+          this.$refs.fullscreenPreview.innerHTML = this.parsedContent
+          this.renderMermaidInElement(this.$refs.fullscreenPreview)
+          this.addCopyButtonsInElement(this.$refs.fullscreenPreview)
+        }
       })
       
       // Save to localStorage
@@ -362,9 +429,385 @@ export default {
     },
     
     toggleFullscreen() {
-      this.fullscreenVisible = true
-      this.$nextTick(() => {
-        this.renderMermaid()
+      // 切换全屏编辑模式，而不是简单的预览
+      if (!this.$refs.fullscreenEditorModal) {
+        // 创建全屏编辑模态框
+        const modal = document.createElement('div')
+        modal.className = 'fullscreen-editor-modal'
+        modal.id = 'fullscreen-editor-modal'
+        modal.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background-color: ${this.isNightMode ? '#1e1e1e' : '#ffffff'};
+          z-index: 9999;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        `
+        
+        // 创建头部
+        const header = document.createElement('div')
+        header.className = 'fullscreen-editor-header'
+        header.style.cssText = `
+          padding: 15px 20px;
+          background-color: ${this.isNightMode ? '#252526' : '#f0f2f5'};
+          border-bottom: 1px solid ${this.isNightMode ? '#3e4451' : '#e4e7ed'};
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-shrink: 0;
+        `
+        
+        const title = document.createElement('h3')
+        title.textContent = '全屏编辑'
+        title.style.cssText = `
+          margin: 0;
+          font-size: 18px;
+          color: ${this.isNightMode ? '#abb2bf' : '#303133'};
+        `
+        
+        const actions = document.createElement('div')
+        actions.style.cssText = 'display: flex; gap: 10px;'
+        
+        const nightModeBtn = document.createElement('button')
+        nightModeBtn.textContent = this.isNightMode ? '日间模式' : '夜间模式'
+        nightModeBtn.style.cssText = `
+          padding: 6px 15px;
+          border: 1px solid ${this.isNightMode ? '#3e4451' : '#dcdfe6'};
+          background-color: ${this.isNightMode ? '#252526' : '#ffffff'};
+          color: ${this.isNightMode ? '#abb2bf' : '#606266'};
+          cursor: pointer;
+          border-radius: 4px;
+          font-size: 14px;
+        `
+        
+        const closeBtn = document.createElement('button')
+        closeBtn.textContent = '关闭'
+        closeBtn.style.cssText = `
+          padding: 6px 15px;
+          border: 1px solid ${this.isNightMode ? '#3e4451' : '#dcdfe6'};
+          background-color: ${this.isNightMode ? '#252526' : '#ffffff'};
+          color: ${this.isNightMode ? '#abb2bf' : '#606266'};
+          cursor: pointer;
+          border-radius: 4px;
+          font-size: 14px;
+        `
+        
+        actions.appendChild(nightModeBtn)
+        actions.appendChild(closeBtn)
+        header.appendChild(title)
+        header.appendChild(actions)
+        
+        // 创建内容区域（编辑区+预览区）
+        const content = document.createElement('div')
+        content.className = 'fullscreen-editor-content'
+        content.style.cssText = `
+          flex: 1;
+          display: flex;
+          overflow: hidden;
+          position: relative;
+        `
+        
+        // 创建编辑区
+        const editorWrapper = document.createElement('div')
+        editorWrapper.className = 'fullscreen-editor-wrapper'
+        editorWrapper.style.cssText = `
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          border-right: 1px solid ${this.isNightMode ? '#3e4451' : '#e4e7ed'};
+        `
+        
+        const editorHeader = document.createElement('div')
+        editorHeader.textContent = '编辑区'
+        editorHeader.style.cssText = `
+          padding: 10px 15px;
+          background-color: ${this.isNightMode ? '#2d2d30' : '#f5f7fa'};
+          border-bottom: 1px solid ${this.isNightMode ? '#3e4451' : '#e4e7ed'};
+          font-weight: bold;
+          color: ${this.isNightMode ? '#abb2bf' : '#606266'};
+        `
+        
+        const editor = document.createElement('textarea')
+        editor.className = 'fullscreen-editor-textarea'
+        editor.value = this.markdownContent
+        editor.style.cssText = `
+          width: 100%;
+          height: 100%;
+          border: none;
+          outline: none;
+          resize: none;
+          padding: 20px;
+          font-family: 'Consolas', 'Monaco', monospace;
+          font-size: 14px;
+          line-height: 1.6;
+          background-color: ${this.isNightMode ? '#1e1e1e' : '#ffffff'};
+          color: ${this.isNightMode ? '#d4d4d4' : '#303133'};
+          box-sizing: border-box;
+        `
+        
+        editorWrapper.appendChild(editorHeader)
+        editorWrapper.appendChild(editor)
+        
+        // 创建预览区
+        const previewWrapper = document.createElement('div')
+        previewWrapper.className = 'fullscreen-preview-wrapper'
+        previewWrapper.style.cssText = `
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+        `
+        
+        const previewHeader = document.createElement('div')
+        previewHeader.textContent = '预览区'
+        previewHeader.style.cssText = `
+          padding: 10px 15px;
+          background-color: ${this.isNightMode ? '#2d2d30' : '#f5f7fa'};
+          border-bottom: 1px solid ${this.isNightMode ? '#3e4451' : '#e4e7ed'};
+          font-weight: bold;
+          color: ${this.isNightMode ? '#abb2bf' : '#606266'};
+        `
+        
+        const preview = document.createElement('div')
+        preview.className = 'fullscreen-preview-content'
+        preview.style.cssText = `
+          flex: 1;
+          padding: 20px;
+          overflow-y: auto;
+          background-color: ${this.isNightMode ? '#1e1e1e' : '#ffffff'};
+          color: ${this.isNightMode ? '#d4d4d4' : '#303133'};
+          box-sizing: border-box;
+        `
+        
+        previewWrapper.appendChild(previewHeader)
+        previewWrapper.appendChild(preview)
+        
+        content.appendChild(editorWrapper)
+        content.appendChild(previewWrapper)
+        
+        modal.appendChild(header)
+        modal.appendChild(content)
+        document.body.appendChild(modal)
+        
+        // 保存引用
+        this.$refs.fullscreenEditorModal = modal
+        this.$refs.fullscreenEditor = editor
+        this.$refs.fullscreenPreview = preview
+        
+        // 更新预览内容
+        preview.innerHTML = this.parsedContent
+        
+        // 添加事件监听
+        editor.addEventListener('input', () => {
+          this.markdownContent = editor.value
+          this.handleInput()
+        })
+        
+        // 添加同步滚动事件
+        editor.addEventListener('scroll', (e) => this.handleFullscreenEditorScroll(e))
+        preview.addEventListener('scroll', (e) => this.handleFullscreenPreviewScroll(e))
+        
+        closeBtn.addEventListener('click', () => {
+          this.exitFullscreenMode()
+        })
+        
+        nightModeBtn.addEventListener('click', () => {
+          this.toggleNightMode()
+          // 更新全屏模式的样式
+          this.updateFullscreenStyles()
+        })
+        
+        // 添加ESC键关闭
+        document.addEventListener('keydown', this.handleFullscreenKeydown)
+        
+        // 渲染mermaid
+        this.$nextTick(() => {
+          this.renderMermaidInElement(preview)
+          this.addCopyButtonsInElement(preview)
+        })
+        
+        // 聚焦编辑器
+        editor.focus()
+      } else {
+        // 如果已经存在，就显示它
+        this.$refs.fullscreenEditorModal.style.display = 'flex'
+        this.$refs.fullscreenEditor.value = this.markdownContent
+        this.$refs.fullscreenPreview.innerHTML = this.parsedContent
+        this.$refs.fullscreenEditor.focus()
+        
+        this.$nextTick(() => {
+          this.renderMermaidInElement(this.$refs.fullscreenPreview)
+          this.addCopyButtonsInElement(this.$refs.fullscreenPreview)
+        })
+      }
+    },
+    
+    // 退出全屏模式
+    exitFullscreenMode() {
+      if (this.$refs.fullscreenEditorModal) {
+        this.$refs.fullscreenEditorModal.style.display = 'none'
+      }
+    },
+    
+    // 组件销毁时清理资源
+    beforeDestroy() {
+      // 移除事件监听器
+      document.removeEventListener('keydown', this.handleFullscreenKeydown)
+      
+      // 清理全屏模态框
+      if (this.$refs.fullscreenEditorModal) {
+        document.body.removeChild(this.$refs.fullscreenEditorModal)
+      }
+    },
+    
+    // 处理全屏模式下的键盘事件
+    handleFullscreenKeydown(e) {
+      if (e.key === 'Escape' && this.$refs.fullscreenEditorModal) {
+        this.exitFullscreenMode()
+      }
+    },
+    
+    // 处理全屏模式下编辑区滚动
+    handleFullscreenEditorScroll(e) {
+      if (this.isSyncing || !this.$refs.fullscreenPreview) return
+      
+      this.isSyncing = true
+      
+      // 计算滚动百分比
+      const scrollPercentage = e.target.scrollTop / (e.target.scrollHeight - e.target.clientHeight)
+      
+      // 应用到预览区
+      this.$refs.fullscreenPreview.scrollTop = scrollPercentage * (this.$refs.fullscreenPreview.scrollHeight - this.$refs.fullscreenPreview.clientHeight)
+      
+      setTimeout(() => {
+        this.isSyncing = false
+      }, 50)
+    },
+    
+    // 处理全屏模式下预览区滚动
+    handleFullscreenPreviewScroll(e) {
+      if (this.isSyncing || !this.$refs.fullscreenEditor) return
+      
+      this.isSyncing = true
+      
+      // 计算滚动百分比
+      const scrollPercentage = e.target.scrollTop / (e.target.scrollHeight - e.target.clientHeight)
+      
+      // 应用到编辑区
+      this.$refs.fullscreenEditor.scrollTop = scrollPercentage * (this.$refs.fullscreenEditor.scrollHeight - this.$refs.fullscreenEditor.clientHeight)
+      
+      setTimeout(() => {
+        this.isSyncing = false
+      }, 50)
+    },
+    
+    // 更新全屏模式的样式
+    updateFullscreenStyles() {
+      if (!this.$refs.fullscreenEditorModal) return
+      
+      const modal = this.$refs.fullscreenEditorModal
+      const editor = this.$refs.fullscreenEditor
+      const preview = this.$refs.fullscreenPreview
+      const header = modal.querySelector('.fullscreen-editor-header')
+      const title = header.querySelector('h3')
+      const editorHeader = modal.querySelector('.fullscreen-editor-wrapper > div:first-child')
+      const previewHeader = modal.querySelector('.fullscreen-preview-wrapper > div:first-child')
+      
+      // 更新背景色
+      modal.style.backgroundColor = this.isNightMode ? '#1e1e1e' : '#ffffff'
+      header.style.backgroundColor = this.isNightMode ? '#252526' : '#f0f2f5'
+      editorHeader.style.backgroundColor = this.isNightMode ? '#2d2d30' : '#f5f7fa'
+      previewHeader.style.backgroundColor = this.isNightMode ? '#2d2d30' : '#f5f7fa'
+      editor.style.backgroundColor = this.isNightMode ? '#1e1e1e' : '#ffffff'
+      preview.style.backgroundColor = this.isNightMode ? '#1e1e1e' : '#ffffff'
+      
+      // 更新文字颜色
+      title.style.color = this.isNightMode ? '#abb2bf' : '#303133'
+      editorHeader.style.color = this.isNightMode ? '#abb2bf' : '#606266'
+      previewHeader.style.color = this.isNightMode ? '#abb2bf' : '#606266'
+      editor.style.color = this.isNightMode ? '#d4d4d4' : '#303133'
+      preview.style.color = this.isNightMode ? '#d4d4d4' : '#303133'
+      
+      // 更新边框颜色
+      header.style.borderBottomColor = this.isNightMode ? '#3e4451' : '#e4e7ed'
+      editorHeader.style.borderBottomColor = this.isNightMode ? '#3e4451' : '#e4e7ed'
+      previewHeader.style.borderBottomColor = this.isNightMode ? '#3e4451' : '#e4e7ed'
+      modal.querySelector('.fullscreen-editor-wrapper').style.borderRightColor = this.isNightMode ? '#3e4451' : '#e4e7ed'
+      
+      // 重新渲染mermaid
+      this.renderMermaidInElement(preview)
+    },
+    
+    // 在指定元素中渲染mermaid
+    renderMermaidInElement(element) {
+      if (typeof window.mermaid !== 'undefined') {
+        window.mermaid.initialize({
+          startOnLoad: false,
+          theme: this.isNightMode ? 'dark' : 'default',
+          securityLevel: 'loose',
+          flowchart: {
+            useMaxWidth: true
+          }
+        })
+        
+        const mermaidElements = element.querySelectorAll('.mermaid')
+        mermaidElements.forEach((mermaidElement) => {
+          try {
+            window.mermaid.run({
+              nodes: [mermaidElement]
+            })
+          } catch (error) {
+            console.error('Mermaid rendering error:', error)
+            mermaidElement.innerHTML = `<pre>Error rendering diagram: ${error.message}</pre>`
+          }
+        })
+      }
+    },
+    
+    // 在指定元素中添加复制按钮
+    addCopyButtonsInElement(element) {
+      const codeBlocks = element.querySelectorAll('pre.hljs')
+      codeBlocks.forEach(block => {
+        if (!block.querySelector('.copy-btn')) {
+          const button = document.createElement('button')
+          button.className = 'copy-btn'
+          button.textContent = '复制'
+          button.style.cssText = `
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            padding: 4px 8px;
+            background-color: ${this.isNightMode ? '#3e4451' : '#f0f2f5'};
+            color: ${this.isNightMode ? '#abb2bf' : '#606266'};
+            border: 1px solid ${this.isNightMode ? '#5a5a5a' : '#dcdfe6'};
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            z-index: 10;
+          `
+          button.onclick = () => {
+            const code = block.querySelector('code').innerText
+            navigator.clipboard.writeText(code).then(() => {
+              const originalText = button.textContent
+              button.textContent = '已复制'
+              setTimeout(() => {
+                button.textContent = originalText
+              }, 2000)
+            }).catch(err => {
+              console.error('复制失败:', err)
+            })
+          }
+          
+          // 确保pre元素有position: relative
+          if (block.style.position !== 'relative') {
+            block.style.position = 'relative'
+          }
+          
+          block.appendChild(button)
+        }
       })
     },
     
@@ -572,6 +1015,13 @@ INSERT INTO users (username, password, email) VALUES
     },
     loadFromLocalStorage() {
       try {
+        // 如果父组件提供了初始内容，优先使用
+        if (this.initialContent) {
+          this.markdownContent = this.initialContent
+          this.parseMarkdown()
+          return
+        }
+        
         const savedContent = localStorage.getItem('markdown-content')
         if (savedContent) {
           this.markdownContent = savedContent
@@ -581,7 +1031,13 @@ INSERT INTO users (username, password, email) VALUES
         }
       } catch (e) {
         console.error('Failed to load from localStorage:', e)
-        this.loadSample()
+        // 如果加载失败且有初始内容，使用初始内容
+        if (this.initialContent) {
+          this.markdownContent = this.initialContent
+          this.parseMarkdown()
+        } else {
+          this.loadSample()
+        }
       }
     }
   },

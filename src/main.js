@@ -43,6 +43,9 @@ import BasicLayout from '@/layout/BasicLayout'
 import VueParticles from 'vue-particles'
 Vue.use(VueParticles)
 
+// 我们暂时移除mermaid的直接导入，避免Babel版本兼容性问题
+// 后续可以考虑通过CDN加载或其他方式集成流程图功能
+
 import iconPicker from 'e-icon-picker'
 import 'e-icon-picker/dist/index.css'// 基础样式
 import 'e-icon-picker/dist/main.css'

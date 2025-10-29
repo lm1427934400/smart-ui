@@ -41,7 +41,7 @@
 </template>
 
 <script>
-import request from '@/utils/request'
+import { getArticleList } from '@/api/article'
 
 export default {
   name: 'ArticleList',
@@ -60,18 +60,14 @@ export default {
   methods: {
     fetchArticles() {
       // 调用后端API获取文章列表
-      request({
-        url: '/v1/sys-content',
-        method: 'get',
-        params: {
-          pageSize: this.pageSize,
-          pageIndex: this.currentPage,
-          title: this.searchKeyword || undefined
-        }
+      getArticleList({
+        pageSize: this.pageSize,
+        pageIndex: this.currentPage,
+        title: this.searchKeyword || undefined
       }).then(res => {
-        if (res && res.data) {
-          this.articles = res.data.list || []
-          this.total = res.data.total || 0
+        if (res && res.code === 200) {
+          this.articles = res.data?.list || []
+          this.total = res.data?.total || 0
         }
       }).catch(err => {
         console.error('获取文章列表失败:', err)

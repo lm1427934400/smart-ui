@@ -28,6 +28,13 @@ const articleManage = {
       component: () => import('@/views/article-manage/my-articles.vue'),
       name: 'MyArticles',
       meta: { title: '我的文章', icon: 'documentation', roles: ['author'] }
+    },
+    {
+      path: 'edit/:id',
+      component: () => import('@/views/article-manage/edit.vue'),
+      name: 'EditArticle',
+      meta: { title: '编辑文章', roles: ['author'] },
+      hidden: true
     }
   ]
 }
